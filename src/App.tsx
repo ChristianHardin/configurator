@@ -1,6 +1,7 @@
 import * as React from 'react';
 import * as Category from './controllers/categories.tsx';
 import AddCategoryDialog from './components/AddCategoryDialog.tsx';
+import SettingsIcon from '@mui/icons-material/Settings';
 import {
 	Box,
 	Drawer,
@@ -12,6 +13,7 @@ import {
 	ListItemButton,
 	ListItemText,
 	Divider,
+	Button,
 } from '@mui/material/'
 
 
@@ -19,6 +21,7 @@ const drawerWidth = 200;
 export default function App() {
 	const [categories, setCategories] = React.useState<Category.Category[]>([])
 	const [hasRun, setHasRun] = React.useState(false);
+	const [currentSelection, setCurrentSelection] = React.useState('');
 
 	React.useEffect(() => {
 		if (hasRun) return;
@@ -35,6 +38,7 @@ export default function App() {
 				categoryArr.push(categoryItem);
 			});
 			categoryArr.sort((a, b) => a.priority - b.priority);
+			setCurrentSelection(categoryArr[0].category);
 			setCategories((prevCategories) => [...prevCategories, ...categoryArr]);
 		});
 	});
@@ -43,13 +47,22 @@ export default function App() {
 		setCategories((prevCategories) => [...prevCategories, newCategory]);
 	}
 
+	const handleListClick = (selection: string) => {
+		setCurrentSelection(selection);
+	}
+
 	return (
 		<Box sx={{ display: 'flex' }}>
 			<AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
 				<Toolbar>
-					<Typography variant="h6" noWrap component="div">
-						Configurator
+					<Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
+						{currentSelection}
 					</Typography>
+					<Button color='inherit'>Add Subcategory</Button>
+					<Button color='inherit'>Add Item</Button>
+					<Button color='inherit' startIcon={<SettingsIcon />}>
+						Settings
+					</Button>
 				</Toolbar>
 			</AppBar>
 			<Drawer
@@ -65,7 +78,7 @@ export default function App() {
 					<List>
 						{categories.map((category) => (
 							<ListItem key={category.priority} disablePadding>
-								<ListItemButton>
+								<ListItemButton onClick={() => handleListClick(category.category)}>
 									<ListItemText primary={category.category} />
 								</ListItemButton>
 							</ListItem>
@@ -75,21 +88,8 @@ export default function App() {
 					<AddCategoryDialog handleUpdateClick={handleUpdateClick} />
 				</Box>
 			</Drawer>
-			<Box component="main" sx={{ flexGrow: 1, p: 3 }}>
+			<Box component="main" sx={{ flexGrow: 1, p: 3, }}>
 				<Toolbar />
-				<Typography sx={{ marginBottom: 2 }}>
-					Consequat mauris nunc congue nisi vitae suscipit. Fringilla est ullamcorper
-					eget nulla facilisi etiam dignissim diam. Pulvinar elementum integer enim
-					neque volutpat ac tincidunt. Ornare suspendisse sed nisi lacus sed viverra
-					tellus. Purus sit amet volutpat consequat mauris. Elementum eu facilisis
-					sed odio morbi. Euismod lacinia at quis risus sed vulputate odio. Morbi
-					tincidunt ornare massa eget egestas purus viverra accumsan in. In hendrerit
-					gravida rutrum quisque non tellus orci ac. Pellentesque nec nam aliquam sem
-					et tortor. Habitant morbi tristique senectus et. Adipiscing elit duis
-					tristique sollicitudin nibh sit. Ornare aenean euismod elementum nisi quis
-					eleifend. Commodo viverra maecenas accumsan lacus vel facilisis. Nulla
-					posuere sollicitudin aliquam ultrices sagittis orci a.
-				</Typography>
 			</Box>
 		</Box>
 	);
