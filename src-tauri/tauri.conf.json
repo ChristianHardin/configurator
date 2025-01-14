@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "anco-revised",
+  "productName": "configurator",
   "version": "0.0.1",
-  "identifier": "com.anco-revised.app",
+  "identifier": "com.configurator.app",
   "build": {
     "beforeDevCommand": "yarn dev",
     "devUrl": "http://localhost:1420",
@@ -12,9 +12,11 @@
   "app": {
     "windows": [
       {
-        "title": "anco-revised",
-        "width": 800,
-        "height": 600
+        "title": "Configurator",
+        "width": 1280,
+        "height": 720,
+		"minWidth": 1280,
+		"minHeight": 720
       }
     ],
     "security": {
