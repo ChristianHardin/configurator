@@ -1,51 +1,93 @@
-import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import { invoke } from "@tauri-apps/api/core";
-import "./App.css";
+import * as React from 'react';
+import * as Category from './controllers/categories.tsx';
+import AddCategoryDialog from './components/AddCategoryDialog.tsx';
+import {
+	Box,
+	Drawer,
+	AppBar,
+	Toolbar,
+	Typography,
+	List,
+	ListItem,
+	ListItemButton,
+	ListItemText,
+	Divider,
+} from '@mui/material/'
 
-function App() {
-  const [greetMsg, setGreetMsg] = useState("");
-  const [name, setName] = useState("");
 
-  async function greet() {
-    // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-    setGreetMsg(await invoke("greet", { name }));
-  }
+const drawerWidth = 200;
+export default function App() {
+	const [categories, setCategories] = React.useState<Category.Category[]>([])
+	const [hasRun, setHasRun] = React.useState(false);
 
-  return (
-    <main className="container">
-      <h1>Welcome to Tauri + React</h1>
+	React.useEffect(() => {
+		if (hasRun) return;
+		setHasRun(true);
 
-      <div className="row">
-        <a href="https://vitejs.dev" target="_blank">
-          <img src="/vite.svg" className="logo vite" alt="Vite logo" />
-        </a>
-        <a href="https://tauri.app" target="_blank">
-          <img src="/tauri.svg" className="logo tauri" alt="Tauri logo" />
-        </a>
-        <a href="https://reactjs.org" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <p>Click on the Tauri, Vite, and React logos to learn more.</p>
+		Category.getCategories().then((result: any) => {
+			result.forEach((element: any) => {
+				const categoryItem: Category.Category = {
+					id: element.id,
+					category: element.category,
+					priority: element.priority
+				};
+				setCategories((prevCategories) => [...prevCategories, categoryItem]);
+			});
+		});
+	});
 
-      <form
-        className="row"
-        onSubmit={(e) => {
-          e.preventDefault();
-          greet();
-        }}
-      >
-        <input
-          id="greet-input"
-          onChange={(e) => setName(e.currentTarget.value)}
-          placeholder="Enter a name..."
-        />
-        <button type="submit">Greet</button>
-      </form>
-      <p>{greetMsg}</p>
-    </main>
-  );
+	const handleUpdateClick = (newCategory: Category.Category): void => {
+		setCategories((prevCategories) => [...prevCategories, newCategory]);
+	}
+
+	return (
+		<Box sx={{ display: 'flex' }}>
+			<AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
+				<Toolbar>
+					<Typography variant="h6" noWrap component="div">
+						Configurator
+					</Typography>
+				</Toolbar>
+			</AppBar>
+			<Drawer
+				variant="permanent"
+				sx={{
+					width: drawerWidth,
+					flexShrink: 0,
+					[`& .MuiDrawer-paper`]: { width: drawerWidth, boxSizing: 'border-box' },
+				}}
+			>
+				<Toolbar />
+				<Box sx={{ overflow: 'auto' }}>
+					<List>
+						{categories.map((category) => (
+							<ListItem key={category.id} disablePadding>
+								<ListItemButton>
+									<ListItemText primary={category.category} />
+								</ListItemButton>
+							</ListItem>
+						))}
+					</List>
+					<Divider />
+					<AddCategoryDialog handleUpdateClick={handleUpdateClick} />
+				</Box>
+			</Drawer>
+			<Box component="main" sx={{ flexGrow: 1, p: 3 }}>
+				<Toolbar />
+				<Typography sx={{ marginBottom: 2 }}>
+					Consequat mauris nunc congue nisi vitae suscipit. Fringilla est ullamcorper
+					eget nulla facilisi etiam dignissim diam. Pulvinar elementum integer enim
+					neque volutpat ac tincidunt. Ornare suspendisse sed nisi lacus sed viverra
+					tellus. Purus sit amet volutpat consequat mauris. Elementum eu facilisis
+					sed odio morbi. Euismod lacinia at quis risus sed vulputate odio. Morbi
+					tincidunt ornare massa eget egestas purus viverra accumsan in. In hendrerit
+					gravida rutrum quisque non tellus orci ac. Pellentesque nec nam aliquam sem
+					et tortor. Habitant morbi tristique senectus et. Adipiscing elit duis
+					tristique sollicitudin nibh sit. Ornare aenean euismod elementum nisi quis
+					eleifend. Commodo viverra maecenas accumsan lacus vel facilisis. Nulla
+					posuere sollicitudin aliquam ultrices sagittis orci a.
+				</Typography>
+			</Box>
+		</Box>
+	);
 }
-
-export default App;
