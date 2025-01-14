@@ -25,14 +25,17 @@ export default function App() {
 		setHasRun(true);
 
 		Category.getCategories().then((result: any) => {
+			const categoryArr: Category.Category[] = [];
 			result.forEach((element: any) => {
 				const categoryItem: Category.Category = {
 					id: element.id,
 					category: element.category,
 					priority: element.priority
 				};
-				setCategories((prevCategories) => [...prevCategories, categoryItem]);
+				categoryArr.push(categoryItem);
 			});
+			categoryArr.sort((a, b) => a.priority - b.priority);
+			setCategories((prevCategories) => [...prevCategories, ...categoryArr]);
 		});
 	});
 
@@ -61,7 +64,7 @@ export default function App() {
 				<Box sx={{ overflow: 'auto' }}>
 					<List>
 						{categories.map((category) => (
-							<ListItem key={category.id} disablePadding>
+							<ListItem key={category.priority} disablePadding>
 								<ListItemButton>
 									<ListItemText primary={category.category} />
 								</ListItemButton>
