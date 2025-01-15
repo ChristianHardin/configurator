@@ -1,168 +1,203 @@
 import * as React from 'react';
 import * as Category from '../controllers/categories.tsx';
-import { v4 as uuidv4 } from 'uuid';
 import AddIcon from '@mui/icons-material/Add';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/DeleteOutlined';
+import SaveIcon from '@mui/icons-material/Save';
+import CancelIcon from '@mui/icons-material/Close';
 import {
 	Dialog,
 	DialogTitle,
 	DialogContent,
-	TextField,
 	DialogActions,
 	Button,
-	List,
-	ListItem,
-	ListItemButton,
-	ListItemText,
-	ListItemIcon,
-	Typography,
-} from '@mui/material/'
+	DialogContentText,
+} from '@mui/material/';
+import {
+	GridRowsProp,
+	GridRowModesModel,
+	GridRowModes,
+	DataGrid,
+	GridColDef,
+	GridToolbarContainer,
+	GridActionsCellItem,
+	GridEventListener,
+	GridRowId,
+	GridRowModel,
+	GridRowEditStopReasons,
+	GridSlotProps,
+	useGridApiRef,
+} from '@mui/x-data-grid';
+
+
+function EditToolbar(props: GridSlotProps['toolbar']) {
+	const { setRows, setRowModesModel } = props;
+
+	const handleClick = () => {
+		const id = randomId();
+		setRows((oldRows) => [
+			...oldRows,
+			{ id, name: '', age: '', role: '', isNew: true },
+		]);
+		setRowModesModel((oldModel) => ({
+			...oldModel,
+			[id]: { mode: GridRowModes.Edit, fieldToFocus: 'name' },
+		}));
+	};
+
+	return (
+		<GridToolbarContainer>
+			<Button color="primary" startIcon={<AddIcon />} onClick={handleClick}>
+				Add record
+			</Button>
+		</GridToolbarContainer>
+	);
+}
+
+
+function CategoryTable() {
+	const [loading, setLoading] = React.useState(true);
+
+	// Rows ======================================================
+	const [rowModesModel, setRowModesModel] = React.useState<GridRowModesModel>({});
+	const [hasRun, setHasRun] = React.useState(false);
+	const apiRef = useGridApiRef();
+
+	React.useEffect(() => {
+		if (hasRun) return;
+		setHasRun(true);
+
+		// Populate table
+		Category.getCategories().then((result: any) => {
+			result.forEach((element: Category.Category) => {
+				if (apiRef.current) apiRef.current.updateRows([element]);
+			})
+			setLoading(false);
+		});
+	})
+
+	// Columns ===================================================
+
+	const handleSaveClick = (id: any) => () => {
+		alert(`handleSaveClick: ${id}`)
+	}
+
+	const handleCancelClick = (id: any) => () => {
+		alert(`handleCancelClick: ${id}`)
+	}
+
+	const handleEditClick = (id: any) => () => {
+		alert(`handleEditClick ${id}`)
+	}
+
+	const handleDeleteClick = (id: any) => () => {
+		alert(`handleDeleteClick ${id}`)
+	}
+
+	const columns: GridColDef[] = [
+		{
+			field: 'id',
+			headerName: 'ID (Pre-generated)',
+			type: 'string',
+			width: 300,
+		},
+		{
+			field: 'category',
+			headerName: 'Category',
+			editable: true,
+			width: 250,
+		},
+		{
+			field: 'priority',
+			headerName: 'Priority',
+			editable: true,
+			type: 'number',
+			width: 100,
+		},
+		{
+			field: 'actions',
+			type: 'actions',
+			headerName: 'Actions',
+			width: 100,
+			cellClassName: 'actions',
+			getActions: ({ id }) => {
+				const isInEditMode = rowModesModel[id]?.mode === GridRowModes.Edit;
+
+				if (isInEditMode) {
+					return [
+						<GridActionsCellItem
+							icon={<SaveIcon />}
+							label="Save"
+							sx={{
+								color: 'primary.main',
+							}}
+							onClick={handleSaveClick(id)}
+						/>,
+						<GridActionsCellItem
+							icon={<CancelIcon />}
+							label="Cancel"
+							className="textPrimary"
+							onClick={handleCancelClick(id)}
+							color="inherit"
+						/>,
+					];
+				}
+
+				return [
+					<GridActionsCellItem
+						icon={<EditIcon />}
+						label="Edit"
+						className="textPrimary"
+						onClick={handleEditClick(id)}
+						color="inherit"
+					/>,
+					<GridActionsCellItem
+						icon={<DeleteIcon />}
+						label="Delete"
+						onClick={handleDeleteClick(id)}
+						color="inherit"
+					/>,
+				];
+			},
+		},
+	];
+
+	return (
+		<DataGrid
+			sx={{ overflow: 'scroll' }}
+			columns={columns}
+			editMode='row'
+			apiRef={apiRef}
+			slots={{ toolbar: EditToolbar }}
+			loading={loading}
+		/>
+	);
+}
 
 export default function AddCategoryDialog({ handleUpdateClick }: any) {
 	const [open, setOpen] = React.useState(false);
-	const [generatedId, setGeneratedId] = React.useState(uuidv4());
-	const [categoryError, setCategoryError] = React.useState(false);
-	const [priorityError, setPriorityError] = React.useState(false);
-	const [nextAvaiablePriority, setNextAvailablePriority] = React.useState(0);
-	const [existingPriorities, setExistingPriorities] = React.useState<number[]>([]);
-	const [existingCategories, setExistingCategories] = React.useState<string[]>([]);
-	const [categoryHelper, setCategoryHelper] = React.useState('');
-	const [priorityHelper, setPriorityHelper] = React.useState('');
-
-	const resetErrors = () => {
-		setCategoryError(false);
-		setCategoryHelper('');
-		setPriorityError(false);
-		setPriorityHelper('The lower the number the higher it appears on the stack. Pre-populated with the next available priority.')
-	}
 
 	const handleClickOpen = () => {
-		let newId = uuidv4();
-		setGeneratedId(newId);
-
-		// Get Category Names
-		Category.getCategoryNames().then((result: any) => {
-			setExistingCategories([]);
-			result.forEach((element: any) => {
-				setExistingCategories((prevCategories) => [...prevCategories, element.category])
-			})
-			console.log('Existing Categories', existingCategories)
-		});
-
-		// Get Priorities
-		Category.getCategoryPriorities().then((result: any) => {
-			setExistingPriorities([]);
-			let next = 0;
-			result.forEach((element: any) => {
-				if (element.priority > next) next = element.priority;
-				setExistingPriorities((prevPriorities) => [...prevPriorities, element.priority]);
-			})
-			console.log('Existing Priorities', existingPriorities);
-			setNextAvailablePriority(next + 1);
-			resetErrors();
-			setOpen(true);
-		});
+		setOpen(true);
 	};
 
 	const handleClose = () => {
 		setOpen(false);
 	};
 
-	const handleCategoryError = () => {
-		setCategoryHelper("Error: Category already exists.")
-		setCategoryError(true);
-	};
-
-	const handlePriorityError = () => {
-		setPriorityHelper("Error: Priority already exists.")
-		setPriorityError(true);
-	};
-
+	const fullscreen = true;
 	const AddDialog = () => {
 		return (
 			<Dialog
 				open={open}
-				PaperProps={{
-					component: 'form',
-					onSubmit: (event: React.FormEvent<HTMLFormElement>) => {
-						event.preventDefault();
-						const formData = new FormData(event.currentTarget);
-						const formJson = Object.fromEntries((formData as any).entries());
-						const newCategory: Category.Category = {
-							id: generatedId,
-							category: formJson.category,
-							priority: formJson.priority
-						}
-
-						resetErrors();
-
-						const categoryAlreadyExists = existingCategories.includes(newCategory.category);
-						const priorityAlreadyExists = existingPriorities.includes(Number(newCategory.priority));
-
-						if (categoryAlreadyExists) {
-							handleCategoryError()
-						}
-
-						if (priorityAlreadyExists) {
-							handlePriorityError()
-						}
-
-						if (!(categoryAlreadyExists || priorityAlreadyExists)) {
-							Category.addCategory(newCategory).then((result) => {
-								if (result) {
-									handleUpdateClick()
-									handleClose()
-								} else { }
-							})
-						}
-					},
-				}}
+				fullScreen={fullscreen}
 			>
-				<DialogTitle>Create New Category</DialogTitle>
+				<DialogTitle>Edit Categories</DialogTitle>
 				<DialogContent>
-					<TextField
-						disabled
-						autoFocus
-						required
-						margin="dense"
-						id="id"
-						name="id"
-						label="Id"
-						type="text"
-						fullWidth
-						variant="standard"
-						defaultValue={generatedId}
-					/>
-					<TextField
-						autoFocus
-						required
-						margin="dense"
-						id="category"
-						name="category"
-						label="Category Name"
-						type="text"
-						fullWidth
-						variant="standard"
-						helperText={categoryHelper}
-						error={categoryError}
-					/>
-					<TextField
-						autoFocus
-						required
-						margin="dense"
-						id="priority"
-						name="priority"
-						label="Priority"
-						type="number"
-						fullWidth
-						variant="standard"
-						helperText={priorityHelper}
-						error={priorityError}
-						defaultValue={nextAvaiablePriority}
-					/>
+					<CategoryTable />
 				</DialogContent>
 				<DialogActions>
-					<Button onClick={handleClose}>Cancel</Button>
-					<Button type="submit">Confirm</Button>
+					<Button onClick={handleClose}>Ok</Button>
 				</DialogActions>
 			</Dialog>
 		);
@@ -171,22 +206,8 @@ export default function AddCategoryDialog({ handleUpdateClick }: any) {
 	return (
 		<div>
 			<AddDialog />
-			<Button color='inherit' onClick={handleClickOpen}>Add Category</Button>
+			<Button color='inherit' onClick={handleClickOpen}>Edit Categories</Button>
 		</div>
 	);
 }
 
-//``<List>
-//``	<ListItem disablePadding>
-//``		<ListItemButton onClick={handleClickOpen}>
-//``			<ListItemIcon>
-//``				<AddIcon />
-//``			</ListItemIcon>
-//``			<ListItemText>
-//``				<Typography>
-//``					ADD CATEGORY
-//``				</Typography>
-//``			</ListItemText>
-//``		</ListItemButton>
-//``	</ListItem>
-//``</List>
