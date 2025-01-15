@@ -1,5 +1,6 @@
 import * as React from 'react';
 import * as Category from './controllers/categories.tsx';
+import * as Subcategory from './controllers/subcategories.tsx';
 import AddCategoryDialog from './components/AddCategoryDialog.tsx';
 import SettingsIcon from '@mui/icons-material/Settings';
 import {
@@ -19,9 +20,10 @@ import {
 
 const drawerWidth = 200;
 export default function App() {
-	const [categories, setCategories] = React.useState<Category.Category[]>([])
+	const [categories, setCategories] = React.useState<Category.Category[]>([]);
+	const [subcategories, setSubcategories] = React.useState<Subcategory.Subcategory[]>([]);
 	const [hasRun, setHasRun] = React.useState(false);
-	const [currentSelection, setCurrentSelection] = React.useState('');
+	const [currentSelection, setCurrentSelection] = React.useState<Category.Category>();
 
 	React.useEffect(() => {
 		if (hasRun) return;
@@ -38,16 +40,31 @@ export default function App() {
 				categoryArr.push(categoryItem);
 			});
 			categoryArr.sort((a, b) => a.priority - b.priority);
-			setCurrentSelection(categoryArr[0].category);
+			setCurrentSelection(categoryArr[0]);
 			setCategories((prevCategories) => [...prevCategories, ...categoryArr]);
 		});
+
+		Subcategory.getSubcategories().then((result: any) => {
+			const subcategoryArr: Subcategory.Subcategory[] = [];
+			result.forEach((element: Subcategory.Subcategory) => {
+				const subcategoryItem: Subcategory.Subcategory = {
+					id: element.id,
+					categoryid: element.categoryid,
+					subcategory: element.subcategory,
+					priority: element.priority
+				};
+				subcategoryArr.push(subcategoryItem);
+			});
+			subcategoryArr.sort((a, b) => a.priority - b.priority);
+			setSubcategories((prevSubcategories) => [...prevSubcategories, ...subcategoryArr]);
+		})
 	});
 
-	const handleUpdateClick = (newCategory: Category.Category): void => {
-		setCategories((prevCategories) => [...prevCategories, newCategory]);
+	const handleUpdateClick = (): void => {
+		window.location.reload();
 	}
 
-	const handleListClick = (selection: string) => {
+	const handleCategorySelection = (selection: Category.Category) => {
 		setCurrentSelection(selection);
 	}
 
@@ -56,8 +73,9 @@ export default function App() {
 			<AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
 				<Toolbar>
 					<Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-						{currentSelection}
+						{currentSelection?.category}
 					</Typography>
+					<AddCategoryDialog handleUpdateClick={handleUpdateClick} />
 					<Button color='inherit'>Add Subcategory</Button>
 					<Button color='inherit'>Add Item</Button>
 					<Button color='inherit' startIcon={<SettingsIcon />}>
@@ -76,19 +94,23 @@ export default function App() {
 				<Toolbar />
 				<Box sx={{ overflow: 'auto' }}>
 					<List>
+						<ListItemText sx={{ p: 1 }}>
+							<Typography>
+								Categories
+							</Typography>
+						</ListItemText>
+						<Divider />
 						{categories.map((category) => (
 							<ListItem key={category.priority} disablePadding>
-								<ListItemButton onClick={() => handleListClick(category.category)}>
+								<ListItemButton onClick={() => handleCategorySelection(category)}>
 									<ListItemText primary={category.category} />
 								</ListItemButton>
 							</ListItem>
 						))}
 					</List>
-					<Divider />
-					<AddCategoryDialog handleUpdateClick={handleUpdateClick} />
 				</Box>
 			</Drawer>
-			<Box component="main" sx={{ flexGrow: 1, p: 3, }}>
+			<Box component="main">
 				<Toolbar />
 			</Box>
 		</Box>

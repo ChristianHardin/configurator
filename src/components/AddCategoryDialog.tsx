@@ -14,6 +14,7 @@ import {
 	ListItemButton,
 	ListItemText,
 	ListItemIcon,
+	Typography,
 } from '@mui/material/'
 
 export default function AddCategoryDialog({ handleUpdateClick }: any) {
@@ -108,7 +109,7 @@ export default function AddCategoryDialog({ handleUpdateClick }: any) {
 						if (!(categoryAlreadyExists || priorityAlreadyExists)) {
 							Category.addCategory(newCategory).then((result) => {
 								if (result) {
-									handleUpdateClick(newCategory)
+									handleUpdateClick()
 									handleClose()
 								} else { }
 							})
@@ -168,18 +169,24 @@ export default function AddCategoryDialog({ handleUpdateClick }: any) {
 	}
 
 	return (
-		<List>
+		<div>
 			<AddDialog />
-			<ListItem disablePadding>
-				<ListItemButton onClick={handleClickOpen}>
-					<ListItemIcon>
-						<AddIcon />
-					</ListItemIcon>
-					<ListItemText>
-						Add Category
-					</ListItemText>
-				</ListItemButton>
-			</ListItem>
-		</List>
+			<Button color='inherit' onClick={handleClickOpen}>Add Category</Button>
+		</div>
 	);
 }
+
+//``<List>
+//``	<ListItem disablePadding>
+//``		<ListItemButton onClick={handleClickOpen}>
+//``			<ListItemIcon>
+//``				<AddIcon />
+//``			</ListItemIcon>
+//``			<ListItemText>
+//``				<Typography>
+//``					ADD CATEGORY
+//``				</Typography>
+//``			</ListItemText>
+//``		</ListItemButton>
+//``	</ListItem>
+//``</List>
