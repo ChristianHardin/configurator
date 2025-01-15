@@ -109,9 +109,11 @@ export async function deleteCategory(id: string) {
 		db = await Database.load('sqlite:main.db');
 		result = await db.execute('DELETE FROM categories WHERE id = $1', [id]);
 		console.log(`DELETE CATEGORY ${id}: `, result);
+		result = true;
 	} catch (err) {
 		console.error(`Error deleting category ${id}: `, err);
 		alert(`An error occured deleting category ${id}.`);
+		result = false;
 	} finally {
 		if (db) {
 			db.close();
