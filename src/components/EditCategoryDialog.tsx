@@ -1,5 +1,6 @@
 import * as React from 'react';
 import * as Category from '../controllers/categories.tsx';
+import { v4 as uuidv4 } from 'uuid';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/DeleteOutlined';
@@ -11,10 +12,8 @@ import {
 	DialogContent,
 	DialogActions,
 	Button,
-	DialogContentText,
 } from '@mui/material/';
 import {
-	GridRowsProp,
 	GridRowModesModel,
 	GridRowModes,
 	DataGrid,
@@ -23,36 +22,9 @@ import {
 	GridActionsCellItem,
 	GridEventListener,
 	GridRowId,
-	GridRowModel,
 	GridRowEditStopReasons,
-	GridSlotProps,
 	useGridApiRef,
 } from '@mui/x-data-grid';
-
-
-function EditToolbar(props: GridSlotProps['toolbar']) {
-	const { setRows, setRowModesModel } = props;
-
-	const handleClick = () => {
-		const id = randomId();
-		setRows((oldRows) => [
-			...oldRows,
-			{ id, name: '', age: '', role: '', isNew: true },
-		]);
-		setRowModesModel((oldModel) => ({
-			...oldModel,
-			[id]: { mode: GridRowModes.Edit, fieldToFocus: 'name' },
-		}));
-	};
-
-	return (
-		<GridToolbarContainer>
-			<Button color="primary" startIcon={<AddIcon />} onClick={handleClick}>
-				Add record
-			</Button>
-		</GridToolbarContainer>
-	);
-}
 
 
 function CategoryTable() {
@@ -76,24 +48,93 @@ function CategoryTable() {
 		});
 	})
 
-	// Columns ===================================================
 
-	const handleSaveClick = (id: any) => () => {
-		alert(`handleSaveClick: ${id}`)
+
+	// Add Record Button =========================================
+	function EditToolbar() {
+		const handleClick = () => {
+			const newCategory: any = {
+				id: uuidv4(),
+				category: '',
+				priority: 0,
+				isNew: true,
+			}
+			if (apiRef.current) apiRef.current.updateRows([newCategory]);
+			setRowModesModel({ ...rowModesModel, [newCategory.id]: { mode: GridRowModes.Edit, fieldToFocus: 'category' } });
+		}
+
+		return (
+			<GridToolbarContainer>
+				<Button color="primary" startIcon={<AddIcon />} onClick={handleClick}>
+					Add record
+				</Button>
+			</GridToolbarContainer>
+		);
 	}
 
-	const handleCancelClick = (id: any) => () => {
-		alert(`handleCancelClick: ${id}`)
+	// Handle clicks ===========================================
+	const handleSaveClick = (id: GridRowId) => () => {
+		setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.View } });
 	}
 
-	const handleEditClick = (id: any) => () => {
-		alert(`handleEditClick ${id}`)
+	const handleCancelClick = (id: GridRowId) => () => {
+		setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.View, ignoreModifications: true }, });
+
+		if (apiRef.current) {
+			const editedRow = apiRef.current.getRow(id);
+			if (editedRow!.isNew) {
+				apiRef.current.updateRows([{ id: id, _action: 'delete' }]);
+			}
+		} else {
+			console.error('apiRef is null.')
+			alert('An error has occured, reload the page.')
+		}
+	}
+
+	const handleEditClick = (id: GridRowId) => () => {
+		setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.Edit } });
 	}
 
 	const handleDeleteClick = (id: any) => () => {
-		alert(`handleDeleteClick ${id}`)
+		Category.deleteCategory(id).then((result) => {
+			if (result) {
+				if (apiRef.current) apiRef.current.updateRows([{ id: id, _action: 'delete' }]);
+			} else { }
+		})
 	}
 
+	const processRowUpdate = (newRow: any) => {
+		let updatedRow;
+		if (newRow.isNew) {
+			updatedRow = { ...newRow, isNew: false };
+			Category.addCategory(updatedRow).then((result) => {
+				if (result) {
+					if (apiRef.current) apiRef.current.updateRows([newRow])
+				} else { }
+			})
+			return updatedRow;
+		} else {
+			updatedRow = { ...newRow, isNew: false };
+			Category.updateCategory(newRow).then((result) => {
+				if (result) {
+					if (apiRef.current) apiRef.current.updateRows([newRow])
+				} else { }
+			})
+			return updatedRow;
+		}
+	};
+
+	const handleRowModesModelChange = (newRowModesModel: GridRowModesModel) => {
+		setRowModesModel(newRowModesModel);
+	};
+
+	const handleRowEditStop: GridEventListener<'rowEditStop'> = (params, event) => {
+		if (params.reason === GridRowEditStopReasons.rowFocusOut) {
+			event.defaultMuiPrevented = true;
+		}
+	};
+
+	// Columns ===================================================
 	const columns: GridColDef[] = [
 		{
 			field: 'id',
@@ -167,6 +208,10 @@ function CategoryTable() {
 			sx={{ overflow: 'scroll' }}
 			columns={columns}
 			editMode='row'
+			rowModesModel={rowModesModel}
+			onRowModesModelChange={handleRowModesModelChange}
+			onRowEditStop={handleRowEditStop}
+			processRowUpdate={processRowUpdate}
 			apiRef={apiRef}
 			slots={{ toolbar: EditToolbar }}
 			loading={loading}
@@ -174,7 +219,10 @@ function CategoryTable() {
 	);
 }
 
-export default function AddCategoryDialog({ handleUpdateClick }: any) {
+
+
+
+export default function EditCategoryDialog({ handleUpdateClick }: any) {
 	const [open, setOpen] = React.useState(false);
 
 	const handleClickOpen = () => {
@@ -183,6 +231,7 @@ export default function AddCategoryDialog({ handleUpdateClick }: any) {
 
 	const handleClose = () => {
 		setOpen(false);
+		handleUpdateClick();
 	};
 
 	const fullscreen = true;
