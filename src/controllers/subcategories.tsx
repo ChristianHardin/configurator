@@ -53,9 +53,11 @@ export async function addSubcategory(subcategory: Subcategory) {
 			[subcategory.id, subcategory.categoryid, subcategory.subcategory, subcategory.priority]
 		);
 		console.log(`ADD SUBCATEGORY ${subcategory.subcategory}: `, result);
+		result = true;
 	} catch (err) {
 		console.error(`Error adding subcategory ${subcategory.subcategory}: `, err);
 		alert(`An error occured adding subcategory ${subcategory.subcategory}.`);
+		result = false;
 	} finally {
 		if (db) {
 			db.close();
@@ -71,9 +73,11 @@ export async function deleteSubcategory(id: string) {
 		db = await Database.load('sqlite:main.db');
 		result = await db.execute('DELETE FROM subcategories WHERE id = $1', [id]);
 		console.log(`DELETE SUBCATEGORY ${id}: `, result);
+		result = true;
 	} catch (err) {
 		console.error(`Error deleting subcategory ${id}: `, err);
 		alert(`An error occured deleting subcategory ${id}.`);
+		result = false;
 	} finally {
 		if (db) {
 			db.close();
@@ -92,9 +96,11 @@ export async function updateSubcategory(subcategory: Subcategory) {
 			[subcategory.subcategory, subcategory.categoryid, subcategory.priority, subcategory.id]
 		);
 		console.log(`UPDATE SUBCATEGORY ${subcategory.id}: `, result);
+		result = true;
 	} catch (err) {
 		console.error(`Error updating subcategory ${subcategory.id}: `, err);
 		alert(`An error occured updating subcategory ${subcategory.id}.`);
+		result = false;
 	} finally {
 		if (db) {
 			db.close();
