@@ -21,8 +21,8 @@ fn main() {
                 id TEXT PRIMARY KEY,
                 categoryid TEXT NOT NULL,
                 subcategory TEXT UNIQUE NOT NULL,
-                priority INTEGER UNIQUE NOT NULL,
-                FOREIGN KEY (categoryid) REFERENCES categories(id)
+                priority INTEGER NOT NULL,
+                FOREIGN KEY (categoryid) REFERENCES categories(id) ON DELETE CASCADE
             )",
             kind: MigrationKind::Up,
         },
@@ -31,12 +31,12 @@ fn main() {
             description: "create_items_table",
             sql: "CREATE TABLE items (
                 id TEXT PRIMARY KEY,
-                subcategoryid TEXT UNIQUE NOT NULL,
-                priority INTEGER UNIQUE NOT NULL,
+                subcategoryid TEXT NOT NULL,
+                priority INTEGER NOT NULL,
                 number TEXT,
                 description TEXT,
                 price REAL,
-                FOREIGN KEY (subcategoryid) REFERENCES subcategories(id)
+                FOREIGN KEY (subcategoryid) REFERENCES subcategories(id) ON DELETE CASCADE
             )",
             kind: MigrationKind::Up,
         },

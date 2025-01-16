@@ -3,6 +3,7 @@ import * as Category from './controllers/categories.tsx';
 import * as Subcategory from './controllers/subcategories.tsx';
 import EditCategoryDialog from './components/EditCategoryDialog.tsx';
 import EditSubcategoryDialog from './components/EditSubcategoryDialog.tsx';
+import EditItemsDialog from './components/EditItemsDialog.tsx';
 import SettingsIcon from '@mui/icons-material/Settings';
 import {
 	Box,
@@ -78,7 +79,7 @@ export default function App() {
 					</Typography>
 					<EditCategoryDialog handleUpdateClick={handleUpdateClick} />
 					<EditSubcategoryDialog handleUpdateClick={handleUpdateClick} />
-					<Button color='inherit'>Add Item</Button>
+					<EditItemsDialog handleUpdateClick={handleUpdateClick} />
 					<Button color='inherit' startIcon={<SettingsIcon />}>
 						Settings
 					</Button>
