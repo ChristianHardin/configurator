@@ -55,9 +55,11 @@ export async function addItems(item: Item) {
 			[item.id, item.subcategoryid, item.priority, item.number, item.description, item.price]
 		);
 		console.log(`ADD ITEM ${item.description}: `, result);
+		result = true;
 	} catch (err) {
 		console.error(`Error adding item ${item.description}: `, err);
 		alert(`An error occured adding item ${item.description}.`);
+		result = false;
 	} finally {
 		if (db) {
 			db.close();
@@ -73,9 +75,11 @@ export async function deleteItem(id: string) {
 		db = await Database.load('sqlite:main.db');
 		result = await db.execute('DELETE FROM items WHERE id = $1', [id]);
 		console.log(`DELETE ITEM ${id}: `, result);
+		result = true;
 	} catch (err) {
 		console.error(`Error deleting item ${id}: `, err);
 		alert(`An error occured deleting item ${id}.`);
+		result = false;
 	} finally {
 		if (db) {
 			db.close();
@@ -85,18 +89,21 @@ export async function deleteItem(id: string) {
 }
 
 export async function updateItem(item: Item) {
+	console.log('ITEM', item);
 	let db;
 	let result;
 	try {
 		db = await Database.load('sqlite:main.db');
 		result = await db.execute(
-			'UPDATE items SET subcategoryid=$1, priority=$2, number=$3, description=$4 price=$5 WHERE id=$6',
+			'UPDATE items SET subcategoryid=$1, priority=$2, number=$3, description=$4, price=$5 WHERE id=$6',
 			[item.subcategoryid, item.priority, item.number, item.description, item.price, item.id]
 		);
 		console.log(`UPDATE ITEM ${item.id}: `, result);
+		result = true;
 	} catch (err) {
 		console.error(`Error updating item ${item.id}: `, err);
 		alert(`An error occured updating item ${item.id}.`);
+		result = false;
 	} finally {
 		if (db) {
 			db.close();

@@ -24,42 +24,6 @@ export async function getCategories() {
 	}
 }
 
-export async function getCategoryNames() {
-	let db;
-	let result;
-	try {
-		db = await Database.load('sqlite:main.db');
-		result = await db.select('SELECT category FROM categories');
-		console.log('GET CATEGORY NAMES: ', result);
-	} catch (err) {
-		console.error('Error fetching category names: ', err);
-		alert('An error occured fetching category names.');
-	} finally {
-		if (db) {
-			db.close();
-		}
-		return result;
-	}
-}
-
-export async function getCategoryPriorities() {
-	let db;
-	let result;
-	try {
-		db = await Database.load('sqlite:main.db');
-		result = await db.select('SELECT priority FROM categories');
-		console.log('GET CATEGORY PRIORITIES: ', result);
-	} catch (err) {
-		console.error('Error fetching category priorites: ', err);
-		alert('An error occured fetching category priorities.');
-	} finally {
-		if (db) {
-			db.close();
-		}
-		return result;
-	}
-}
-
 export async function getCategory(id: string) {
 	let db;
 	let result;
